@@ -1,0 +1,10 @@
+R_DEF: Internal format may change without notice
+local
+id accessibility_button
+id status_text
+id toggle_switch
+layout activity_main
+string accessibility_service_description
+string accessibility_service_label
+string app_name
+xml accessibility_service_config

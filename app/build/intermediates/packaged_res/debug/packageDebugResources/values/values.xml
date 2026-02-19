@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_description">YouTube 쇼츠를 자동으로 감지하고 차단합니다.</string>
+    <string name="accessibility_service_label">쇼츠 차단기 서비스</string>
+    <string name="app_name">쇼츠 차단기</string>
+</resources>

@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.shortsblockr.app-debug-31:/xml_accessibility_service_config.xml.flat",
+        "source": "com.shortsblockr.app-main-33:/xml/accessibility_service_config.xml"
+    },
+    {
+        "merged": "com.shortsblockr.app-debug-31:/layout_activity_main.xml.flat",
+        "source": "com.shortsblockr.app-main-33:/layout/activity_main.xml"
+    }
+]
