@@ -40,20 +40,37 @@ public class ShortsBlockerService extends AccessibilityService {
         long now = System.currentTimeMillis();
         if (now - lastBlockTime < BLOCK_COOLDOWN_MS) return;
 
-        if (isInShortsScreen()) {
-            lastBlockTime = now;
-            performGlobalAction(GLOBAL_ACTION_BACK);
-            mainHandler.post(() ->
-                Toast.makeText(getApplicationContext(), "쇼츠 차단! 집중하세요", Toast.LENGTH_SHORT).show()
-            );
+        // Fast detection via class name on window state change
+        if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            CharSequence className = event.getClassName();
+            Log.d(TAG, "CLASS: " + className + " PKG: " + event.getPackageName());
+            if (className != null) {
+                String cls = className.toString().toLowerCase();
+                if (cls.contains("shorts") || cls.contains("reel")) {
+                    blockShorts();
+                    return;
+                }
+            }
         }
+
+        if (isInShortsScreen()) {
+            blockShorts();
+        }
+    }
+
+    private void blockShorts() {
+        lastBlockTime = System.currentTimeMillis();
+        performGlobalAction(GLOBAL_ACTION_BACK);
+        mainHandler.post(() ->
+            Toast.makeText(getApplicationContext(), "쇼츠 차단! 집중하세요", Toast.LENGTH_SHORT).show()
+        );
     }
 
     private boolean isInShortsScreen() {
         AccessibilityNodeInfo root = getRootInActiveWindow();
         if (root == null) return false;
         try {
-            return findShortsNode(root, 6);
+            return findShortsNode(root, 10);
         } finally {
             root.recycle();
         }
@@ -62,19 +79,17 @@ public class ShortsBlockerService extends AccessibilityService {
     private boolean findShortsNode(AccessibilityNodeInfo node, int depth) {
         if (node == null || depth <= 0) return false;
 
-        CharSequence desc = node.getContentDescription();
+        // Skip content description check — it matches the bottom nav "Shorts" tab button
+        // Only check view IDs that are specific to the Shorts player
         String viewId = node.getViewIdResourceName();
-        CharSequence className = node.getClassName();
-
-        if (desc != null) {
-            String d = desc.toString().toLowerCase();
-            if (d.equals("shorts") || d.contains("short video")) return true;
+        if (viewId != null) {
+            String id = viewId.toLowerCase();
+            if (id.contains("reel_player") || id.contains("reel_watch") ||
+                id.contains("shorts_player") || id.contains("shorts_container")) return true;
         }
-        if (viewId != null && (viewId.contains("shorts") || viewId.contains("reel_player"))) return true;
-        if (className != null && className.toString().toLowerCase().contains("shorts")) return true;
 
         int childCount = node.getChildCount();
-        for (int i = 0; i < Math.min(childCount, 10); i++) {
+        for (int i = 0; i < Math.min(childCount, 30); i++) {
             AccessibilityNodeInfo child = node.getChild(i);
             if (child != null) {
                 boolean found = findShortsNode(child, depth - 1);
