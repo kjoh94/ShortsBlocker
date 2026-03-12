@@ -2,7 +2,6 @@ package com.shortsblockr;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
-import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -15,7 +14,9 @@ public class ShortsBlockerService extends AccessibilityService {
     private static final String TAG = "ShortsBlocker";
     private static final String PREFS_NAME = "ShortsBlockerPrefs";
     private static final String KEY_ENABLED = "enabled";
+    private static final String KEY_DISABLED_AT = "disabled_at";
     private static final long BLOCK_COOLDOWN_MS = 1500;
+    private static final long AUTO_ENABLE_MS = 60_000L;
 
     private Handler mainHandler;
     private long lastBlockTime = 0;
@@ -101,7 +102,16 @@ public class ShortsBlockerService extends AccessibilityService {
     }
 
     private boolean isEnabled() {
-        return getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean(KEY_ENABLED, true);
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        if (!prefs.getBoolean(KEY_ENABLED, true)) {
+            long disabledAt = prefs.getLong(KEY_DISABLED_AT, 0);
+            if (disabledAt > 0 && System.currentTimeMillis() - disabledAt >= AUTO_ENABLE_MS) {
+                prefs.edit().putBoolean(KEY_ENABLED, true).remove(KEY_DISABLED_AT).apply();
+                return true;
+            }
+            return false;
+        }
+        return true;
     }
 
     @Override
