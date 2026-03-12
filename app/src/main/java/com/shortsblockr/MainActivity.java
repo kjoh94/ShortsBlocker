@@ -1,7 +1,6 @@
 package com.shortsblockr;
 
 import android.app.AlertDialog;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -40,13 +39,8 @@ public class MainActivity extends AppCompatActivity {
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         statusText = findViewById(R.id.status_text);
         pauseButton = findViewById(R.id.pause_button);
-        Button accessibilityButton = findViewById(R.id.accessibility_button);
 
         pauseButton.setOnClickListener(v -> showPinDialog());
-
-        accessibilityButton.setOnClickListener(v ->
-            startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-        );
     }
 
     @Override
@@ -142,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
             statusText.setText("✅ 쇼츠 차단 중!");
             statusText.setTextColor(0xFF4CAF50);
         } else {
-            statusText.setText("접근성 서비스를 먼저 활성화해주세요");
+            statusText.setText("접근성 서비스를 먼저 활성화해주세요\n설정 > 접근성 > 다운로드된 앱 > 쇼츠 차단기");
             statusText.setTextColor(0xFFFF5252);
         }
     }

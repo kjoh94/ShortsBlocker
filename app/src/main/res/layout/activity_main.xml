@@ -42,23 +42,14 @@
         android:backgroundTint="#FF9800"
         android:textColor="#FFFFFF"/>
 
-    <Button
-        android:id="@+id/accessibility_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="접근성 설정 열기"
-        android:textSize="16sp"
-        android:padding="14dp"
-        android:backgroundTint="#FF0000"
-        android:textColor="#FFFFFF"/>
-
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="설치 후:\n1. 접근성 설정 열기 버튼 클릭\n2. 설치된 앱 → 쇼츠 차단기 선택\n3. 서비스 활성화\n4. 완료!"
+        android:text="최초 1회: 설정 &gt; 접근성 &gt; 다운로드된 앱 &gt; 쇼츠 차단기 활성화"
         android:textSize="13sp"
         android:textColor="#666666"
         android:layout_marginTop="32dp"
+        android:gravity="center"
         android:lineSpacingMultiplier="1.5"/>
 
 </LinearLayout>
