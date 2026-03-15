@@ -1,0 +1,19 @@
+# Gradle
+.gradle/
+build/
+
+# Local configuration
+local.properties
+
+# Android Studio
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# App build outputs
+app/build/
+
+# Keystore
+*.jks
+*.keystore
