@@ -21,8 +21,11 @@ public class MainActivity extends AppCompatActivity {
     private static final String KEY_ENABLED = "enabled";
     private static final String KEY_PIN = "pin";
     private static final String KEY_DISABLED_AT = "disabled_at";
-    private static final String DEFAULT_PIN = "1234";
-    private static final long AUTO_ENABLE_MS = 60_000L;
+    private static final String KEY_DURATION_MS = "duration_ms";
+    private static final String PIN_1MIN = "1234";
+    private static final String PIN_5MIN = "0416";
+    private static final long ONE_MIN_MS = 60_000L;
+    private static final long FIVE_MIN_MS = 300_000L;
 
     private TextView statusText;
     private Button pauseButton;
@@ -48,7 +51,8 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         long disabledAt = prefs.getLong(KEY_DISABLED_AT, 0);
         if (disabledAt > 0) {
-            if (System.currentTimeMillis() - disabledAt >= AUTO_ENABLE_MS) {
+            long durationMs = prefs.getLong(KEY_DURATION_MS, ONE_MIN_MS);
+            if (System.currentTimeMillis() - disabledAt >= durationMs) {
                 enableBlocking();
             } else {
                 startCountdown();
@@ -75,9 +79,10 @@ public class MainActivity extends AppCompatActivity {
             .setView(input)
             .setPositiveButton("확인", (dialog, which) -> {
                 String entered = input.getText().toString();
-                String saved = prefs.getString(KEY_PIN, DEFAULT_PIN);
-                if (entered.equals(saved)) {
-                    disableBlocking();
+                if (entered.equals(PIN_1MIN)) {
+                    disableBlocking(ONE_MIN_MS);
+                } else if (entered.equals(PIN_5MIN)) {
+                    disableBlocking(FIVE_MIN_MS);
                 } else {
                     Toast.makeText(this, "PIN이 틀렸습니다", Toast.LENGTH_SHORT).show();
                 }
@@ -88,14 +93,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void enableBlocking() {
         cancelCountdown();
-        prefs.edit().putBoolean(KEY_ENABLED, true).remove(KEY_DISABLED_AT).apply();
+        prefs.edit().putBoolean(KEY_ENABLED, true).remove(KEY_DISABLED_AT).remove(KEY_DURATION_MS).apply();
         updateUI();
     }
 
-    private void disableBlocking() {
+    private void disableBlocking(long durationMs) {
         prefs.edit()
             .putBoolean(KEY_ENABLED, false)
             .putLong(KEY_DISABLED_AT, System.currentTimeMillis())
+            .putLong(KEY_DURATION_MS, durationMs)
             .apply();
         startCountdown();
     }
@@ -106,7 +112,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 long disabledAt = prefs.getLong(KEY_DISABLED_AT, 0);
-                long remaining = AUTO_ENABLE_MS - (System.currentTimeMillis() - disabledAt);
+                long durationMs = prefs.getLong(KEY_DURATION_MS, ONE_MIN_MS);
+                long remaining = durationMs - (System.currentTimeMillis() - disabledAt);
                 if (remaining <= 0) {
                     enableBlocking();
                 } else {
