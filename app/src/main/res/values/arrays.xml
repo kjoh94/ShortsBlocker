@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Keep in sync with AllowlistMatcher.DEFAULT_ENTRIES.
+         Handle is stored with @; matching also accepts the same handle without @. -->
+    <string-array name="default_channel_allowlist">
+        <item>adrenalGr8</item>
+        <item>@adrenalgr8964</item>
+        <item>UC6WHTOfNwh-69D_4EXRFgkg</item>
+    </string-array>
+</resources>

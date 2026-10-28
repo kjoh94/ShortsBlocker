@@ -17,7 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String PREFS_NAME = "ShortsBlockerPrefs";
+    private static final String PREFS_NAME = ChannelAllowlist.PREFS_NAME;
     private static final String KEY_ENABLED = "enabled";
     private static final String KEY_PIN = "pin";
     private static final String KEY_DISABLED_AT = "disabled_at";
@@ -28,6 +28,8 @@ public class MainActivity extends AppCompatActivity {
     private static final long FIVE_MIN_MS = 300_000L;
 
     private TextView statusText;
+    private TextView allowlistHeading;
+    private TextView allowlistText;
     private Button pauseButton;
     private SharedPreferences prefs;
 
@@ -41,9 +43,13 @@ public class MainActivity extends AppCompatActivity {
 
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         statusText = findViewById(R.id.status_text);
+        allowlistHeading = findViewById(R.id.allowlist_heading);
+        allowlistText = findViewById(R.id.allowlist_text);
         pauseButton = findViewById(R.id.pause_button);
 
         pauseButton.setOnClickListener(v -> showPinDialog());
+        findViewById(R.id.allowlist_button).setOnClickListener(v -> showAllowlistDialog());
+        refreshAllowlistLabel();
     }
 
     @Override
@@ -59,12 +65,58 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         updateUI();
+        refreshAllowlistLabel();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         cancelCountdown();
+    }
+
+    private void refreshAllowlistLabel() {
+        ChannelAllowlist list = ChannelAllowlist.load(this);
+        if (list.isUsingDefaults()) {
+            allowlistHeading.setText(R.string.allowlist_heading_default);
+        } else if (list.isEmpty()) {
+            allowlistHeading.setText(R.string.allowlist_heading_empty);
+        } else {
+            allowlistHeading.setText(R.string.allowlist_heading);
+        }
+        allowlistText.setText(list.isEmpty()
+                ? getString(R.string.allowlist_empty_detail)
+                : list.editorText());
+    }
+
+    private void showAllowlistDialog() {
+        final ChannelAllowlist current = ChannelAllowlist.load(this);
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT
+                | InputType.TYPE_TEXT_FLAG_MULTI_LINE
+                | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        input.setMinLines(4);
+        input.setMaxLines(8);
+        input.setGravity(android.view.Gravity.TOP | android.view.Gravity.START);
+        int pad = (int) (12 * getResources().getDisplayMetrics().density);
+        input.setPadding(pad, pad, pad, pad);
+        input.setText(current.editorText());
+
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.allowlist_dialog_title)
+            .setMessage(R.string.allowlist_dialog_message)
+            .setView(input)
+            .setPositiveButton(R.string.allowlist_save, (dialog, which) -> {
+                ChannelAllowlist.save(this, input.getText().toString());
+                refreshAllowlistLabel();
+                Toast.makeText(this, R.string.allowlist_saved, Toast.LENGTH_SHORT).show();
+            })
+            .setNeutralButton(R.string.allowlist_restore, (dialog, which) -> {
+                ChannelAllowlist.restoreDefaults(this);
+                refreshAllowlistLabel();
+                Toast.makeText(this, R.string.allowlist_restored, Toast.LENGTH_SHORT).show();
+            })
+            .setNegativeButton(R.string.allowlist_cancel, null)
+            .show();
     }
 
     private void showPinDialog() {

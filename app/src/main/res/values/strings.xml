@@ -2,5 +2,17 @@
 <resources>
     <string name="app_name">쇼츠 차단기</string>
     <string name="accessibility_service_label">쇼츠 차단기 서비스</string>
-    <string name="accessibility_service_description">YouTube 쇼츠를 자동으로 감지하고 차단합니다.</string>
+    <string name="accessibility_service_description">YouTube 쇼츠를 자동으로 감지하고 차단합니다. 허용 채널의 쇼츠는 차단하지 않습니다.</string>
+    <string name="allowlist_heading_default">허용 채널 (기본값)</string>
+    <string name="allowlist_heading">허용 채널</string>
+    <string name="allowlist_heading_empty">허용 채널 없음</string>
+    <string name="allowlist_empty_detail">모든 쇼츠를 차단합니다</string>
+    <string name="allowlist_edit">허용 채널 편집</string>
+    <string name="allowlist_dialog_title">허용 채널</string>
+    <string name="allowlist_dialog_message">한 줄에 하나씩 입력하세요. 채널 이름, @핸들, 채널 ID를 쓸 수 있습니다. 이 목록의 쇼츠는 차단하지 않습니다.\n\n비운 뒤 저장하면 모든 쇼츠를 차단합니다. 기본값은 처음 들어 있던 내 채널로 되돌립니다.</string>
+    <string name="allowlist_save">저장</string>
+    <string name="allowlist_restore">기본값</string>
+    <string name="allowlist_cancel">취소</string>
+    <string name="allowlist_saved">허용 채널을 저장했습니다</string>
+    <string name="allowlist_restored">기본 허용 채널로 되돌렸습니다</string>
 </resources>
