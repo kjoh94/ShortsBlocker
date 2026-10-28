@@ -1,0 +1,122 @@
+name: Release debug APK
+
+# Builds a debug APK on a GitHub-hosted runner and publishes it on GitHub Releases.
+# App code is not modified by this workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to create or update
+        required: false
+        default: v1.1.0-allowlist
+        type: string
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-debug-apk-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android SDK packages
+        run: |
+          set -euo pipefail
+          sdkmanager --install "platforms;android-34" "build-tools;35.0.0"
+          sdkmanager --list_installed
+
+      - name: Build debug APK
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Prepare APK asset
+        id: apk
+        run: |
+          set -euo pipefail
+          src=$(find app/build/outputs/apk/debug -type f -name '*.apk' | head -n 1)
+          if [ -z "${src}" ] || [ ! -f "${src}" ]; then
+            echo "Debug APK was not produced."
+            find app/build/outputs -type f || true
+            exit 1
+          fi
+          cp "${src}" ShortsBlocker-debug.apk
+          echo "file=ShortsBlocker-debug.apk" >> "${GITHUB_OUTPUT}"
+          stat -c '%n %s bytes' ShortsBlocker-debug.apk
+          sha256sum ShortsBlocker-debug.apk
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          DISPATCH_TAG: ${{ inputs.tag }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ "${REF_TYPE}" = "tag" ]; then
+            TAG="${REF_NAME}"
+          elif [ -n "${DISPATCH_TAG}" ]; then
+            TAG="${DISPATCH_TAG}"
+          else
+            TAG="v1.1.0-allowlist"
+          fi
+          case "${TAG}" in
+            v[A-Za-z0-9._-]*) ;;
+            *)
+              echo "Refusing release tag: ${TAG}"
+              exit 1
+              ;;
+          esac
+
+          FILE="${{ steps.apk.outputs.file }}"
+          {
+            echo "Debug APK of ShortsBlocker for sideloading, including on a Galaxy S25."
+            echo
+            echo "Built with \`./gradlew assembleDebug\` on ubuntu-latest (Temurin 17, compileSdk 34, build-tools 35.0.0). App blocking behavior is unchanged."
+            echo
+            echo "Default channel allowlist:"
+            echo "- adrenalGr8"
+            echo "- @adrenalgr8964"
+            echo "- UC6WHTOfNwh-69D_4EXRFgkg"
+            echo
+            echo "Shorts from that channel stay open. Every other Shorts screen is still blocked."
+            echo
+            echo "The APK is signed with the CI debug keystore. Installing over a copy signed with a different key requires uninstalling the previous app first."
+          } > release-notes.md
+
+          TITLE="ShortsBlocker ${TAG} (debug APK)"
+          if gh release view "${TAG}" --repo "${REPOSITORY}" >/dev/null 2>&1; then
+            gh release upload "${TAG}" "${FILE}" --repo "${REPOSITORY}" --clobber
+            gh release edit "${TAG}" --repo "${REPOSITORY}" --title "${TITLE}" --notes-file release-notes.md
+          else
+            gh release create "${TAG}" "${FILE}" \
+              --repo "${REPOSITORY}" \
+              --title "${TITLE}" \
+              --notes-file release-notes.md \
+              --latest
+          fi
+
+          echo "Release: https://github.com/${REPOSITORY}/releases/tag/${TAG}"
+          echo "Download: https://github.com/${REPOSITORY}/releases/download/${TAG}/${FILE}"
