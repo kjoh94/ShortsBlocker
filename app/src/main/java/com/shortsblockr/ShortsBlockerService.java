@@ -12,15 +12,15 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Toast;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Blocks YouTube Shorts with Back, except channels on the allowlist.
  *
- * <p>Heuristics, in order, once a Shorts screen is detected (window class name
- * contains {@code shorts} or {@code reel}, or a player view ID contains
- * {@code reel_player}, {@code reel_watch}, {@code shorts_player}, or
- * {@code shorts_container}):
+ * <p>Heuristics, in order, once a full-screen Shorts player is detected
+ * ({@link ShortsSignals}): a player / pager / page-container view id, a
+ * player class such as {@code ReelPlayerView}, or a Reel watch
+ * activity/fragment. The Home Shorts shelf ({@code shorts_container},
+ * {@code reel_recycler}) and the Shorts tab do not count.
  *
  * <ol>
  *   <li>Read the accessibility tree: text, content description, and channel-like
@@ -157,7 +157,9 @@ public class ShortsBlockerService extends AccessibilityService {
         long now = System.currentTimeMillis();
         boolean classSaysShorts = false;
         if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            classSaysShorts = isShortsClassName(event.getClassName());
+            // Only the window class. Child player classes are read in the tree walk,
+            // which stays on the scan interval so content events do not walk every frame.
+            classSaysShorts = ShortsSignals.isFullScreenPlayerClass(event.getClassName());
             classShortsAt = classSaysShorts ? now : 0;
             Log.d(TAG, "CLASS: " + event.getClassName() + " PKG: " + packageName);
         }
@@ -319,7 +321,10 @@ public class ShortsBlockerService extends AccessibilityService {
         scan.nodesVisited++;
 
         String viewId = node.getViewIdResourceName();
-        if (isShortsPlayerId(viewId)) scan.shortsPlayer = true;
+        if (ShortsSignals.isFullScreenPlayerId(viewId)
+                || ShortsSignals.isFullScreenPlayerClass(node.getClassName())) {
+            scan.shortsPlayer = true;
+        }
         boolean visible = isShown(node);
         boolean nameBearing = AllowlistMatcher.isNameBearingViewId(viewId);
         considerText(scan, chars(node.getText()), visible, nameBearing, list);
@@ -445,21 +450,6 @@ public class ShortsBlockerService extends AccessibilityService {
         long visibleArea = (long) visibleW * visibleH;
         long area = (long) bounds.width() * bounds.height();
         return visibleArea * 2 >= area;
-    }
-
-    private static boolean isShortsPlayerId(String viewId) {
-        if (viewId == null) return false;
-        String id = viewId.toLowerCase(Locale.ROOT);
-        return id.contains("reel_player")
-                || id.contains("reel_watch")
-                || id.contains("shorts_player")
-                || id.contains("shorts_container");
-    }
-
-    private static boolean isShortsClassName(CharSequence className) {
-        if (className == null) return false;
-        String cls = className.toString().toLowerCase(Locale.ROOT);
-        return cls.contains("shorts") || cls.contains("reel");
     }
 
     private static boolean isYoutubePackage(CharSequence packageName) {

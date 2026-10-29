@@ -8,7 +8,7 @@ on:
       tag:
         description: Release tag to create or update
         required: false
-        default: v1.1.0-allowlist
+        default: v1.2.0
         type: string
   push:
     tags:
@@ -80,7 +80,7 @@ jobs:
           elif [ -n "${DISPATCH_TAG}" ]; then
             TAG="${DISPATCH_TAG}"
           else
-            TAG="v1.1.0-allowlist"
+            TAG="v1.2.0"
           fi
           case "${TAG}" in
             v[A-Za-z0-9._-]*) ;;
@@ -94,14 +94,16 @@ jobs:
           {
             echo "Debug APK of ShortsBlocker for sideloading, including on a Galaxy S25."
             echo
-            echo "Built with \`./gradlew assembleDebug\` on ubuntu-latest (Temurin 17, compileSdk 34, build-tools 35.0.0). App blocking behavior is unchanged."
+            echo "Built with \`./gradlew assembleDebug\` on ubuntu-latest (Temurin 17, compileSdk 34, build-tools 35.0.0)."
             echo
-            echo "Default channel allowlist:"
+            echo "Full-screen Shorts detection uses player, pager, and page-container view ids, plus player class names. The Home Shorts shelf and the Shorts tab are not treated as the player."
+            echo
+            echo "Default channel allowlist (unchanged):"
             echo "- adrenalGr8"
             echo "- @adrenalgr8964"
             echo "- UC6WHTOfNwh-69D_4EXRFgkg"
             echo
-            echo "Shorts from that channel stay open. Every other Shorts screen is still blocked."
+            echo "Shorts from that channel stay open. Every other full-screen Shorts player is still blocked."
             echo
             echo "The APK is signed with the CI debug keystore. Installing over a copy signed with a different key requires uninstalling the previous app first."
           } > release-notes.md
