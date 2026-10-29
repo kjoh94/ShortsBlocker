@@ -22,14 +22,14 @@ ShortsBlocker (쇼츠 차단기) is an Android utility app that automatically de
 ./gradlew clean
 ```
 
-There are no tests configured in this project.
+Gradle has no test task. Allowlist and Shorts-detection checks are plain Java mains under `app/src/test`; each class javadoc has the `javac` command.
 
 ## Architecture
 
 Single-module app (`app/`) with two core components in `com.shortsblockr`:
 
 - **MainActivity.java** — Single activity with a toggle switch to enable/disable blocking. Manages state via SharedPreferences (`ShortsBlockerPrefs` / `enabled` key) and directs users to system accessibility settings.
-- **ShortsBlockerService.java** — Accessibility service that monitors `com.google.android.youtube` for window state/content changes. Detects Shorts by recursively traversing the accessibility node tree (up to 6 levels deep) looking for content descriptions, view IDs, or class names containing "shorts" or "reel_player". Triggers `GLOBAL_ACTION_BACK` with a 1500ms cooldown between blocks.
+- **ShortsBlockerService.java** — Accessibility service that monitors `com.google.android.youtube` for window state/content changes. Full-screen Shorts detection lives in `ShortsSignals` (player/pager/page-container view ids, or a player / Reel-watch class name). Shelf ids (`shorts_container`, `reel_recycler`) and the Shorts tab do not count. Allowlisted channels skip Back. Triggers `GLOBAL_ACTION_BACK` with a 1500ms cooldown between blocks.
 
 The accessibility service is configured in `res/xml/accessibility_service_config.xml` targeting the YouTube package with window state and content change event types.
 

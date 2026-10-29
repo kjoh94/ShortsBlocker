@@ -6,9 +6,9 @@ An Android app that automatically detects and blocks YouTube Shorts using Androi
 
 Once enabled, the app monitors the YouTube app in the background. When a Shorts screen is detected, it navigates back — unless that Short is from an allowlisted channel.
 
-Detection uses two signals:
-- **Window class name** — instantly catches Shorts when the screen transitions
-- **Accessibility node tree** — scans for Shorts player-specific view IDs (`reel_player`, `reel_watch`, `shorts_player`, `shorts_container`) as a fallback
+Detection looks for the full-screen Shorts player, not the Shorts row on Home:
+- **Player view IDs** — a node whose id is a Shorts/Reel player, pager, or page container (`reel_player_page_container`, `reel_watch_player`, `reel_player_underlay`, `reel_watch_fragment_root`, `shorts_video_pager`, and the same shapes). A shelf id (`shorts_container`, `reel_recycler`, `shorts_shelf`) does not count.
+- **Player class name** — the window, or a view in the tree, whose simple class name is a Shorts player (`ReelPlayerView`) or a Reel watch activity/fragment. The Shorts tab (`LegacyShortsTabIndicatorView`) does not count. `WatchWhileActivity` by itself does not count; Shorts now opens inside that activity, so the tree is what matters.
 
 Before pressing Back, the service checks the channel. Shorts from an allowlisted channel stay open: no Back press and no toast. Every other Shorts screen is still blocked.
 
